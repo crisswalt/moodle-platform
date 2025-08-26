@@ -38,17 +38,6 @@ services:
     depends_on:
       - db
       - redis
-    # networks:
-    #   - dokploy-network
-    # labels:
-    #   # Labels para Traefik (proxy automático de Dokploy)
-    #   - "traefik.enable=true"
-    #   - "traefik.http.routers.moodle.rule=Host(`${MOODLE_DOMAIN:-moodle.tu-dominio.com}`)"
-    #   - "traefik.http.routers.moodle.tls=true"
-    #   - "traefik.http.routers.moodle.tls.certresolver=letsencrypt"
-    #   - "traefik.http.services.moodle.loadbalancer.server.port=80"
-    #   - "traefik.http.middlewares.moodle-headers.headers.customRequestHeaders.X-Forwarded-Proto=https"
-    #   - "traefik.http.routers.moodle.middlewares=moodle-headers"
 
   db:
     image: mariadb:10.11
@@ -73,8 +62,6 @@ services:
       --innodb_log_file_size=64M
       --innodb_flush_log_at_trx_commit=2
       --innodb_flush_method=O_DIRECT
-    networks:
-      - dokploy-network
 
   redis:
     image: redis:7-alpine
@@ -84,8 +71,6 @@ services:
     volumes:
       # Usar la convención de Dokploy para persistencia de Redis
       - "../files/redis-data:/data"
-    networks:
-      - dokploy-network
 
   # Opcional: phpMyAdmin con acceso por subdominio
   phpmyadmin:
@@ -100,17 +85,3 @@ services:
       - UPLOAD_LIMIT=100M
     depends_on:
       - db
-    networks:
-      - dokploy-network
-    labels:
-      # Subdominio para phpMyAdmin
-      - "traefik.enable=true"
-      - "traefik.http.routers.phpmyadmin.rule=Host(`db.${MOODLE_DOMAIN:-moodle.tu-dominio.com}`)"
-      - "traefik.http.routers.phpmyadmin.tls=true"
-      - "traefik.http.routers.phpmyadmin.tls.certresolver=letsencrypt"
-      - "traefik.http.services.phpmyadmin.loadbalancer.server.port=80"
-
-networks:
-  # Red obligatoria para Dokploy
-  dokploy-network:
-    external: true
