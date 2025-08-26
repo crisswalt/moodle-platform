@@ -1,0 +1,116 @@
+version: '3.8'
+
+services:
+  moodle:
+    build:
+      context: .
+      args:
+        RELEASE: ${MOODLE_RELEASE:-MOODLE_500_STABLE}
+    container_name: moodle_web
+    restart: unless-stopped
+    environment:
+      - DB_TYPE=${DB_TYPE:-mariadb}
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=${DB_NAME:-moodle}
+      - DB_USER=${DB_USER:-moodle}
+      - DB_PASSWORD=${DB_PASSWORD:-moodle_secure_password_2024}
+      - MOODLE_URL=${MOODLE_URL:-https://moodle.tu-dominio.com}
+      - MOODLE_ADMIN_USER=${MOODLE_ADMIN_USER:-admin}
+      - MOODLE_ADMIN_PASSWORD=${MOODLE_ADMIN_PASSWORD:-Admin123!}
+      - MOODLE_ADMIN_EMAIL=${MOODLE_ADMIN_EMAIL:-admin@example.com}
+      - MOODLE_FULL_NAME=${MOODLE_FULL_NAME:-Moodle Learning Platform}
+      - MOODLE_SHORT_NAME=${MOODLE_SHORT_NAME:-Moodle}
+      - MOODLE_DATA_PATH=/var/www/moodledata
+      - PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT:-256M}
+      - PHP_MAX_EXECUTION_TIME=${PHP_MAX_EXECUTION_TIME:-300}
+      - PHP_UPLOAD_MAX_FILESIZE=${PHP_UPLOAD_MAX_FILESIZE:-100M}
+      - PHP_POST_MAX_SIZE=${PHP_POST_MAX_SIZE:-100M}
+      - PHP_MAX_INPUT_VARS=${PHP_MAX_INPUT_VARS:-5000}
+      - TZ=${TZ:-America/Santiago}
+      - MOODLE_DEBUG=${MOODLE_DEBUG:-false}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      # Usar la convención de Dokploy para persistencia
+      - "../files/moodledata:/var/www/moodledata"
+      - "../files/moodle-html:/var/www/html"
+    depends_on:
+      - db
+      - redis
+    # networks:
+    #   - dokploy-network
+    # labels:
+    #   # Labels para Traefik (proxy automático de Dokploy)
+    #   - "traefik.enable=true"
+    #   - "traefik.http.routers.moodle.rule=Host(`${MOODLE_DOMAIN:-moodle.tu-dominio.com}`)"
+    #   - "traefik.http.routers.moodle.tls=true"
+    #   - "traefik.http.routers.moodle.tls.certresolver=letsencrypt"
+    #   - "traefik.http.services.moodle.loadbalancer.server.port=80"
+    #   - "traefik.http.middlewares.moodle-headers.headers.customRequestHeaders.X-Forwarded-Proto=https"
+    #   - "traefik.http.routers.moodle.middlewares=moodle-headers"
+
+  db:
+    image: mariadb:10.11
+    container_name: moodle_db
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root_secure_password_2024}
+      - MYSQL_DATABASE=${DB_NAME:-moodle}
+      - MYSQL_USER=${DB_USER:-moodle}
+      - MYSQL_PASSWORD=${DB_PASSWORD:-moodle_secure_password_2024}
+      - MYSQL_COLLATION_SERVER=utf8mb4_unicode_ci
+      - MYSQL_CHARACTER_SET_SERVER=utf8mb4
+    volumes:
+      # Usar la convención de Dokploy para persistencia de DB
+      - "../files/mariadb-data:/var/lib/mysql"
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --max_allowed_packet=64M
+      --innodb_buffer_pool_size=256M
+      --innodb_log_file_size=64M
+      --innodb_flush_log_at_trx_commit=2
+      --innodb_flush_method=O_DIRECT
+    networks:
+      - dokploy-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: moodle_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      # Usar la convención de Dokploy para persistencia de Redis
+      - "../files/redis-data:/data"
+    networks:
+      - dokploy-network
+
+  # Opcional: phpMyAdmin con acceso por subdominio
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:5
+    container_name: moodle_phpmyadmin
+    restart: unless-stopped
+    environment:
+      - PMA_HOST=db
+      - PMA_PORT=3306
+      - PMA_USER=root
+      - PMA_PASSWORD=${MYSQL_ROOT_PASSWORD:-root_secure_password_2024}
+      - UPLOAD_LIMIT=100M
+    depends_on:
+      - db
+    networks:
+      - dokploy-network
+    labels:
+      # Subdominio para phpMyAdmin
+      - "traefik.enable=true"
+      - "traefik.http.routers.phpmyadmin.rule=Host(`db.${MOODLE_DOMAIN:-moodle.tu-dominio.com}`)"
+      - "traefik.http.routers.phpmyadmin.tls=true"
+      - "traefik.http.routers.phpmyadmin.tls.certresolver=letsencrypt"
+      - "traefik.http.services.phpmyadmin.loadbalancer.server.port=80"
+
+networks:
+  # Red obligatoria para Dokploy
+  dokploy-network:
+    external: true

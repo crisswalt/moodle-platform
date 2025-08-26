@@ -1,0 +1,112 @@
+version: '3.8'
+
+services:
+  moodle:
+    build:
+      context: .
+      args:
+        RELEASE: ${MOODLE_RELEASE:-MOODLE_500_STABLE}
+    container_name: moodle_web
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      - DB_TYPE=${DB_TYPE:-mariadb}
+      - DB_HOST=${DB_HOST:-db}
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_NAME=${DB_NAME:-moodle}
+      - DB_USER=${DB_USER:-moodle}
+      - DB_PASSWORD=${DB_PASSWORD:-moodle_secure_password_2024}
+      - MOODLE_URL=${MOODLE_URL:-http://localhost:8080}
+      - MOODLE_ADMIN_USER=${MOODLE_ADMIN_USER:-admin}
+      - MOODLE_ADMIN_PASSWORD=${MOODLE_ADMIN_PASSWORD:-Admin123!}
+      - MOODLE_ADMIN_EMAIL=${MOODLE_ADMIN_EMAIL:-admin@example.com}
+      - MOODLE_FULL_NAME=${MOODLE_FULL_NAME:-Moodle Learning Platform}
+      - MOODLE_SHORT_NAME=${MOODLE_SHORT_NAME:-Moodle}
+      - MOODLE_DATA_PATH=${MOODLE_DATA_PATH:-/var/www/moodledata}
+      - PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT:-256M}
+      - PHP_MAX_EXECUTION_TIME=${PHP_MAX_EXECUTION_TIME:-300}
+      - PHP_UPLOAD_MAX_FILESIZE=${PHP_UPLOAD_MAX_FILESIZE:-100M}
+      - PHP_POST_MAX_SIZE=${PHP_POST_MAX_SIZE:-100M}
+      - PHP_MAX_INPUT_VARS=${PHP_MAX_INPUT_VARS:-5000}
+      - TZ=${TZ:-America/Santiago}
+      - MOODLE_DEBUG=${MOODLE_DEBUG:-false}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - moodle_data:/var/www/moodledata
+      - moodle_html:/var/www/html
+    depends_on:
+      - db
+      - redis
+    networks:
+      - moodle_network
+
+  db:
+    image: mariadb:10.11
+    container_name: moodle_db
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root_secure_password_2024}
+      - MYSQL_DATABASE=${DB_NAME:-moodle}
+      - MYSQL_USER=${DB_USER:-moodle}
+      - MYSQL_PASSWORD=${DB_PASSWORD:-moodle_secure_password_2024}
+      - MYSQL_COLLATION_SERVER=utf8mb4_unicode_ci
+      - MYSQL_CHARACTER_SET_SERVER=utf8mb4
+    volumes:
+      - db_data:/var/lib/mysql
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --max_allowed_packet=64M
+      --innodb_buffer_pool_size=256M
+      --innodb_log_file_size=64M
+      --innodb_flush_log_at_trx_commit=2
+      --innodb_flush_method=O_DIRECT
+    networks:
+      - moodle_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: moodle_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - moodle_network
+
+  # Optional: phpMyAdmin for database management
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:5
+    container_name: moodle_phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      - PMA_HOST=db
+      - PMA_PORT=3306
+      - PMA_USER=root
+      - PMA_PASSWORD=${MYSQL_ROOT_PASSWORD:-root_secure_password_2024}
+      - UPLOAD_LIMIT=100M
+    depends_on:
+      - db
+    networks:
+      - moodle_network
+    profiles:
+      - tools
+
+volumes:
+  moodle_data:
+    driver: local
+  moodle_html:
+    driver: local  
+  db_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  moodle_network:
+    driver: bridge
