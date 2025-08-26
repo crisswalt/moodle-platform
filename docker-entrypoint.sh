@@ -10,6 +10,35 @@ wait_for_db() {
     echo "Database is ready!"
 }
 
+# Function to clone/update Moodle if needed
+setup_moodle_code() {
+    if [ ! -f "/var/www/html/version.php" ]; then
+        echo "Moodle code not found. Cloning from repository..."
+        
+        # Remove any existing files (like .gitkeep)
+        rm -rf /var/www/html/*
+        rm -rf /var/www/html/.[^.]*
+        
+        # Clone Moodle
+        git clone -b ${MOODLE_RELEASE} --depth 1 https://github.com/moodle/moodle.git /tmp/moodle
+        
+        # Move files to html directory
+        mv /tmp/moodle/* /var/www/html/
+        mv /tmp/moodle/.[^.]* /var/www/html/ 2>/dev/null || true
+        
+        # Clean up
+        rm -rf /tmp/moodle
+        
+        # Set correct permissions
+        chown -R www-data:www-data /var/www/html
+        chmod -R 755 /var/www/html
+        
+        echo "Moodle code cloned successfully!"
+    else
+        echo "Moodle code already exists. Skipping clone."
+    fi
+}
+
 # Function to substitute environment variables in PHP config
 substitute_env_vars() {
     # Substitute environment variables in PHP configuration
@@ -140,6 +169,7 @@ export DB_USER=${DB_USER:-moodle}
 export DB_PASSWORD=${DB_PASSWORD:-moodle}
 export MOODLE_URL=${MOODLE_URL:-http://localhost}
 export MOODLE_DATA_PATH=${MOODLE_DATA_PATH:-/var/www/moodledata}
+export MOODLE_RELEASE=${MOODLE_RELEASE:-MOODLE_500_STABLE}
 export MOODLE_ADMIN_USER=${MOODLE_ADMIN_USER:-admin}
 export MOODLE_ADMIN_PASSWORD=${MOODLE_ADMIN_PASSWORD:-Admin123!}
 export MOODLE_ADMIN_EMAIL=${MOODLE_ADMIN_EMAIL:-admin@example.com}
@@ -151,6 +181,9 @@ export PHP_UPLOAD_MAX_FILESIZE=${PHP_UPLOAD_MAX_FILESIZE:-100M}
 export PHP_POST_MAX_SIZE=${PHP_POST_MAX_SIZE:-100M}
 export PHP_MAX_INPUT_VARS=${PHP_MAX_INPUT_VARS:-5000}
 export TZ=${TZ:-UTC}
+
+# Setup Moodle code first
+setup_moodle_code
 
 # Ensure correct permissions
 chown -R www-data:www-data /var/www/html
@@ -166,7 +199,7 @@ create_moodle_config
 
 # Install Moodle if needed (only on first run)
 if [ "$1" = "apache2-foreground" ]; then
-    install_moodle &
+    install_moodle > /var/log/moodle-install.log 2>&1 &
 fi
 
 echo "Moodle container initialization completed!"

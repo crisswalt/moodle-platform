@@ -65,9 +65,7 @@ RUN useradd -r -u 1000 -m -c "Moodle user" -d /var/www -s /bin/false moodle \
 
 # Clone Moodle from Git repository
 WORKDIR /var/www/html
-RUN git clone -b ${RELEASE} --depth 1 https://github.com/moodle/moodle.git . \
-    && rm -rf .git \
-    && chown -R www-data:www-data /var/www/html \
+RUN chown -R www-data:www-data /var/www/html \
     && chown -R moodle:moodle /var/www/moodledata \
     && chmod -R 755 /var/www/html \
     && chmod -R 777 /var/www/moodledata

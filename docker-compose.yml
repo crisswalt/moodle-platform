@@ -2,8 +2,6 @@ services:
   moodle:
     build:
       context: .
-      args:
-        RELEASE: ${MOODLE_RELEASE:-MOODLE_500_STABLE}
     container_name: moodle_web
     restart: unless-stopped
     ports:
@@ -22,6 +20,7 @@ services:
       - MOODLE_FULL_NAME=${MOODLE_FULL_NAME:-Moodle Learning Platform}
       - MOODLE_SHORT_NAME=${MOODLE_SHORT_NAME:-Moodle}
       - MOODLE_DATA_PATH=${MOODLE_DATA_PATH:-/var/www/moodledata}
+      - MOODLE_RELEASE=${MOODLE_RELEASE:-MOODLE_500_STABLE}
       - PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT:-256M}
       - PHP_MAX_EXECUTION_TIME=${PHP_MAX_EXECUTION_TIME:-300}
       - PHP_UPLOAD_MAX_FILESIZE=${PHP_UPLOAD_MAX_FILESIZE:-100M}
