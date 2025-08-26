@@ -78,6 +78,10 @@ global \$CFG;
 \$CFG->directorypermissions = 02777;
 \$CFG->admin     = 'admin';
 
+// Proxy/SSL settings for reverse proxy setup
+\$CFG->reverseproxy = ${MOODLE_REVERSE_PROXY:-false};
+\$CFG->sslproxy = ${MOODLE_SSL_PROXY:-false};
+
 // Performance and security settings
 \$CFG->session_handler_class = '\core\session\file';
 \$CFG->session_file_save_path = \$CFG->dataroot.'/sessions';
@@ -170,6 +174,8 @@ export DB_PASSWORD=${DB_PASSWORD:-moodle}
 export MOODLE_URL=${MOODLE_URL:-http://localhost}
 export MOODLE_DATA_PATH=${MOODLE_DATA_PATH:-/var/www/moodledata}
 export MOODLE_RELEASE=${MOODLE_RELEASE:-MOODLE_500_STABLE}
+export MOODLE_REVERSE_PROXY=${MOODLE_REVERSE_PROXY:-true}
+export MOODLE_SSL_PROXY=${MOODLE_SSL_PROXY:-true}
 export MOODLE_ADMIN_USER=${MOODLE_ADMIN_USER:-admin}
 export MOODLE_ADMIN_PASSWORD=${MOODLE_ADMIN_PASSWORD:-Admin123!}
 export MOODLE_ADMIN_EMAIL=${MOODLE_ADMIN_EMAIL:-admin@example.com}

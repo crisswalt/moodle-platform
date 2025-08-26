@@ -1,8 +1,5 @@
 FROM php:8.2-apache
 
-# Build arguments
-ARG RELEASE=MOODLE_500_STABLE
-
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -78,7 +75,7 @@ COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Expose port
-EXPOSE 80 443
+EXPOSE 80
 
 RUN apt-get update && apt-get install -y --no-install-recommends gettext-base \
     && apt-get clean \
