@@ -3,28 +3,23 @@ FROM php:8.2-apache
 # Build arguments
 ARG RELEASE=MOODLE_500_STABLE
 
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+
 # Install system dependencies and clean up in single layer
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     unzip \
-    libpng-dev \
-    libjpeg-dev \
-    libfreetype6-dev \
-    libzip-dev \
-    libicu-dev \
-    libxml2-dev \
-    libxslt-dev \
-    libonig-dev \
-    libc-client-dev \
-    libkrb5-dev \
     ghostscript \
     graphviz \
     aspell \
-    libaspell-dev \
-    clamav \
-    clamav-daemon \
+    curl \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /tmp/* /var/tmp/*
+
+# Reset environment variable
+ENV DEBIAN_FRONTEND=dialog
 
 # Install PHP extension installer
 ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
@@ -51,7 +46,6 @@ RUN install-php-extensions \
     iconv \
     simplexml \
     dom \
-    zip \
     fileinfo \
     sodium \
     exif \
