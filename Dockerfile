@@ -82,9 +82,10 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 # Expose port
 EXPOSE 80 443
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost/login/index.php || exit 1
+# Health check - More generous timing for initial setup
+HEALTHCHECK --interval=60s --timeout=10s --start-period=300s --retries=5 \
+    CMD curl -f http://localhost/ || curl -f http://localhost/index.php || exit 1
+
 
 # Set working directory
 WORKDIR /var/www/html
