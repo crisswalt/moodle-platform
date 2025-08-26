@@ -86,6 +86,7 @@ services:
       - PMA_PORT=3306
       - PMA_USER=root
       - PMA_PASSWORD=${MYSQL_ROOT_PASSWORD:-root_secure_password_2024}
+      - PMA_ABSOLUTE_URI=${PMA_ABSOLUTE_URI:-https://moodle.tu-dominio.com/phpmyadmin}
       - UPLOAD_LIMIT=100M
     depends_on:
       - db
