@@ -33,8 +33,8 @@ services:
       - REDIS_PORT=6379
     volumes:
       # Usar la convención de Dokploy para persistencia
-      - "../files/moodledata:/var/www/moodledata"
-      - "../files/moodle-html:/var/www/html"
+      - "./files/moodledata:/var/www/moodledata"
+      - "./files/moodle-html:/var/www/html"
     depends_on:
       - db
       - redis
@@ -52,7 +52,7 @@ services:
       - MYSQL_CHARACTER_SET_SERVER=utf8mb4
     volumes:
       # Usar la convención de Dokploy para persistencia de DB
-      - "../files/mariadb-data:/var/lib/mysql"
+      - "./files/mariadb-data:/var/lib/mysql"
     command: >
       --default-authentication-plugin=mysql_native_password
       --character-set-server=utf8mb4
@@ -70,7 +70,7 @@ services:
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     volumes:
       # Usar la convención de Dokploy para persistencia de Redis
-      - "../files/redis-data:/data"
+      - "./files/redis-data:/data"
 
   # Opcional: phpMyAdmin con acceso por subdominio
   phpmyadmin:
