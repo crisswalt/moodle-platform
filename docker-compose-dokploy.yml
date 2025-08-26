@@ -38,6 +38,8 @@ services:
     depends_on:
       - db
       - redis
+    networks:
+      - moodle_network
 
   db:
     image: mariadb:10.11
@@ -62,6 +64,8 @@ services:
       --innodb_log_file_size=64M
       --innodb_flush_log_at_trx_commit=2
       --innodb_flush_method=O_DIRECT
+    networks:
+      - moodle_network
 
   redis:
     image: redis:7-alpine
@@ -71,6 +75,8 @@ services:
     volumes:
       # Usar la convención de Dokploy para persistencia de Redis
       - "./files/redis-data:/data"
+    networks:
+      - moodle_network
 
   # Opcional: phpMyAdmin con acceso por subdominio
   phpmyadmin:
@@ -85,3 +91,9 @@ services:
       - UPLOAD_LIMIT=100M
     depends_on:
       - db
+    networks:
+      - moodle_network
+
+networks:
+  moodle_network:
+    driver: bridge
