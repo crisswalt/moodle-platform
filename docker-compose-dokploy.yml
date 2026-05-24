@@ -32,8 +32,8 @@ services:
       - REDIS_PORT=6379
     volumes:
       # Usar la convención de Dokploy para persistencia
-      - "./files/moodledata:/var/www/moodledata"
-      - "./files/moodle-html:/var/www/html"
+      - "moodledata_volume:/var/www/moodledata"
+      - "moodle_html_volume:/var/www/html"
     depends_on:
       - db
       - redis
@@ -53,7 +53,7 @@ services:
       - MYSQL_CHARACTER_SET_SERVER=utf8mb4
     volumes:
       # Usar la convención de Dokploy para persistencia de DB
-      - "./files/mariadb-data:/var/lib/mysql"
+      - "mariadb_data_volume:/var/lib/mysql"
     command: >
       --default-authentication-plugin=mysql_native_password
       --character-set-server=utf8mb4
@@ -73,7 +73,7 @@ services:
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     volumes:
       # Usar la convención de Dokploy para persistencia de Redis
-      - "./files/redis-data:/data"
+      - "redis_data_volume:/data"
     networks:
       - moodle_network
 
@@ -93,6 +93,13 @@ services:
       - db
     networks:
       - moodle_network
+
+volumes:
+  # Volúmenes nombrados para mejorar drásticamente el I/O performance
+  moodledata_volume:
+  moodle_html_volume:
+  mariadb_data_volume:
+  redis_data_volume:
 
 networks:
   moodle_network:
