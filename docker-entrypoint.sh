@@ -154,7 +154,7 @@ install_moodle() {
             
         # Mark as installed
         touch /var/www/moodledata/.installed
-        chown moodle:moodle /var/www/moodledata/.installed
+        chown www-data:www-data /var/www/moodledata/.installed
         
         echo "Moodle installation completed!"
     else
@@ -193,7 +193,7 @@ setup_moodle_code
 
 # Ensure correct permissions
 chown -R www-data:www-data /var/www/html
-chown -R moodle:moodle /var/www/moodledata
+chown -R www-data:www-data /var/www/moodledata
 chmod -R 755 /var/www/html
 chmod -R 777 /var/www/moodledata
 
