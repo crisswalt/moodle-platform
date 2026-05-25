@@ -58,7 +58,7 @@ unset(\$CFG);
 global \$CFG;
 \$CFG = new stdClass();
 
-\$CFG->dbtype    = 'mysqli';
+\$CFG->dbtype    = '${DB_TYPE}';
 \$CFG->dblibrary = 'native';
 \$CFG->dbhost    = '${DB_HOST}';
 \$CFG->dbname    = '${DB_NAME}';
