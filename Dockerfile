@@ -3,7 +3,7 @@ FROM php:8.2-apache
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system dependencies and clean up in single layer
+# Install system dependencies (Unificado en una sola capa limpia)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     unzip \
@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     graphviz \
     aspell \
     curl \
+    gettext-base \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /tmp/* /var/tmp/*
@@ -18,10 +19,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Reset environment variable
 ENV DEBIAN_FRONTEND=dialog
 
-# Install PHP extension installer
+# Install PHP extension installer de mlocati
 ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
-# Install PHP extensions using the installer
+# Install PHP extensions (CORREGIDO: Agregado redis y eliminadas redundancias)
 RUN install-php-extensions \
     mysqli \
     pgsql \
@@ -31,42 +32,34 @@ RUN install-php-extensions \
     zip \
     intl \
     soap \
-    xmlrpc \
     opcache \
     mbstring \
     curl \
-    openssl \
-    tokenizer \
     xml \
-    ctype \
-    json \
-    iconv \
     simplexml \
     dom \
     fileinfo \
     sodium \
     exif \
     ldap \
-    imap
-
-RUN install-php-extensions redis
+    imap \
+    redis
 
 # Configure Apache
 RUN a2enmod rewrite ssl headers
 COPY apache-config.conf /etc/apache2/sites-available/moodle.conf
 RUN a2ensite moodle && a2dissite 000-default
 
-# Create moodle user and directories
-RUN useradd -r -u 1000 -m -c "Moodle user" -d /var/www -s /bin/false moodle \
-    && mkdir -p /var/www/moodledata \
+# Estructura de directorios estándar garantizando que Apache (www-data) sea dueño
+RUN mkdir -p /var/www/moodledata \
     && mkdir -p /var/www/html \
-    && chown -R moodle:moodle /var/www
+    && chown -R www-data:www-data /var/www
 
-# Clone Moodle from Git repository
+# Set working directory antes de operaciones de archivo
 WORKDIR /var/www/html
-RUN chown -R www-data:www-data /var/www/html \
-    && chown -R moodle:moodle /var/www/moodledata \
-    && chmod -R 755 /var/www/html \
+
+# Ajuste estricto de permisos para Moodle
+RUN chmod -R 755 /var/www/html \
     && chmod -R 777 /var/www/moodledata
 
 # Copy PHP configuration
@@ -78,19 +71,6 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Expose port
 EXPOSE 80
-
-RUN apt-get update && apt-get install -y --no-install-recommends gettext-base \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && rm -rf /tmp/* /var/tmp/*
-
-# Health check - More generous timing for initial setup
-# HEALTHCHECK --interval=60s --timeout=10s --start-period=300s --retries=5 \
-#     CMD curl -f http://localhost/ || curl -f http://localhost/index.php || exit 1
-
-
-# Set working directory
-WORKDIR /var/www/html
 
 # Use custom entrypoint
 ENTRYPOINT ["docker-entrypoint.sh"]
