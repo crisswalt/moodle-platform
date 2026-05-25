@@ -49,6 +49,8 @@ RUN install-php-extensions \
     ldap \
     imap
 
+RUN install-php-extensions redis
+
 # Configure Apache
 RUN a2enmod rewrite ssl headers
 COPY apache-config.conf /etc/apache2/sites-available/moodle.conf
